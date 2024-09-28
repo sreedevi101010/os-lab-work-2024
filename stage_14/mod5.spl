@@ -1,0 +1,41 @@
+alias currentpid R0;
+alias processtableentry R1;
+currentpid = [SYSTEM_STATUS_TABLE + 1];
+
+processtableentry = PROCESS_TABLE + 16*currentpid;
+backup;
+[processtableentry + 12] = SP % 512;
+[processtableentry + 14] = PTBR;
+[processtableentry + 15] = PTLR;
+
+alias i R2;
+alias state R3;
+alias newpid R4;
+i=currentpid +1;
+newpid=0;
+while(i<16) do
+	state = [PROCESS_TABLE + i*16 + 4];
+	if(state==READY || state==CREATED) then
+		newpid=i;
+		break;
+	endif;
+	i=i+1;
+endwhile;
+
+processtableentry = PROCESS_TABLE + newpid*16;
+SP =[processtableentry + 11]*512 + [processtableentry + 12];
+PTBR = [processtableentry + 14];
+PTLR = [processtableentry + 15];
+
+[SYSTEM_STATUS_TABLE + 1]= newpid;
+
+if(state==CREATED) then
+	SP = [processtableentry + 13];
+	[processtableentry + 4]=RUNNING;
+	[processtableentry + 9] = 0;
+	ireturn;
+endif;
+
+[processtableentry + 4]=RUNNING;
+restore;
+return;
