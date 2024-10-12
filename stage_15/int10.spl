@@ -1,0 +1,12 @@
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE +1]*16 +4]=TERMINATED;
+alias counter R0;
+counter =0;
+while(counter<16) do
+	if(([PROCESS_TABLE + counter*16 +4]==READY)||([PROCESS_TABLE + counter*16 +4]==CREATED)) then
+		if(counter!=0) then
+			call SCHEDULER;
+		endif;
+	endif;
+	counter=counter+1;
+endwhile;
+halt;
